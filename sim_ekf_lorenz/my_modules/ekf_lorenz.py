@@ -46,27 +46,27 @@ def Jacobian(X, s, b, r):
 
 ###################
 def predict(X, P, Q, dt):
-    x     = X[:3]
-    par   = X[3:]
+    x       = X[:3]
+    par     = X[3:]
     
-    Npar  = len(par)
-    Nx    = len(x)
+    Npar    = len(par)
+    Nx      = len(x)
     
-    s     = par[0]
-    b     = par[1]
-    r     = par[2]
+    s       = par[0]
+    b       = par[1]
+    r       = par[2]
     
-    J     = Jacobian(X, s, b, r)
+    J       = Jacobian(X, s, b, r)
+    tmp     = np.zeros((Npar, Nx + Npar))
+    F       = np.vstack((J, tmp))
+    F       = np.eye(len(X)) + F*dt  # ~=  exp (F * dt)
+    X_new   = F @ X # X0 * exp (F * dt)
     
-    fx    = J @ X
-    x     = x + fx * dt + 0.1 * np.sqrt(dt) * np.random.randn(x.shape[0])
-    par   = par 
+    x_new   = X_new[:Nx]#x + X_new[:6] * dt + eta * np.sqrt(dt) * np.random.normal(loc=0, scale=1, size=Nx)
+    par_new = X_new[Nx:]
     
-    tmp   = np.hstack((np.zeros((Npar,Nx)), np.eye(Npar)))
-    F     = np.vstack((J, tmp))
-    
-    XPred = np.hstack((x, par))
-    PPred = F @ P @ F.T + Q
+    XPred   = np.hstack((x_new, par_new))
+    PPred   = F @ P @ F.T + Q
     
     return XPred, PPred
 

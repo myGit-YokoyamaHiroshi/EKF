@@ -71,7 +71,7 @@ Nstate     = (y.shape[1]) + param_true.shape[1]
 print(__file__ + " start!!")
 
 #%%
-UT         = 0.5
+UT         = 0.1
 Q          = UT * np.diag([1,1,1,1,1,1])#
 R          = (1 - UT) * np.eye(3) 
 
@@ -108,8 +108,8 @@ plt.ylabel('$x_2$')
 plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0, fontsize=26, frameon=False)
 plt.show()
 #%%
-plt.plot(time, param_true[:,-1], label='exact');
-plt.plot(time, x_pred[:,-1], label='estimated')
+plt.plot(time, param_true[:,-1], label='exact', zorder=2);
+plt.plot(time, x_pred[:,-1], label='estimated', zorder=1)
 plt.ylim(0, 30)
 plt.xlabel('time (s)')
 plt.ylabel('amplitude (a.u.)')
@@ -117,8 +117,8 @@ plt.title('parameter $r$')
 plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0, fontsize=26, frameon=False)
 plt.show()
 #%%
-plt.plot(time, param_true[:,1], label='exact');
-plt.plot(time, x_pred[:,-2], label='estimated')
+plt.plot(time, param_true[:,1], label='exact', zorder=2);
+plt.plot(time, x_pred[:,-2], label='estimated', zorder=1)
 plt.ylim(0, 30)
 plt.xlabel('time (s)')
 plt.ylabel('amplitude (a.u.)')
@@ -126,8 +126,8 @@ plt.title('parameter $b$')
 plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0, fontsize=26, frameon=False)
 plt.show()
 #%%
-plt.plot(time, param_true[:,0], label='exact');
-plt.plot(time, x_pred[:,-3], label='estimated')
+plt.plot(time, param_true[:,0], label='exact', zorder=2);
+plt.plot(time, x_pred[:,-3], label='estimated', zorder=1)
 plt.ylim(0, 30)
 plt.xlabel('time (s)')
 plt.ylabel('amplitude (a.u.)')
