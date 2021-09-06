@@ -46,94 +46,104 @@ import numpy as np
 import joblib
 import random
 
-np.random.seed(0)
-#%% load synthetic data
-name     = []
-ext      = []
-for file in os.listdir(param_path):
-    split_str = os.path.splitext(file)
-    name.append(split_str[0])
-    ext.append(split_str[1])
+def main():
+    np.random.seed(0)
+    #%% load synthetic data
+    name     = []
+    ext      = []
+    for file in os.listdir(param_path):
+        split_str = os.path.splitext(file)
+        name.append(split_str[0])
+        ext.append(split_str[1])
+        
+        print(split_str)
+        
+    fullpath   = param_path + name[0] + ext[0]
+    param_dict = np.load(fullpath, encoding='ASCII', allow_pickle='True').item()
+    y          = param_dict['y']
+    time       = param_dict['t']
+    fs         = param_dict['fs']
+    dt         = param_dict['dt']
+    Nt         = len(y)
+    param_true = param_dict['param'] # exact value of satate variables 2 (parameters of Neural mass model)
+    Nstate     = (y.shape[1]) + param_true.shape[1]
+#%%
+    print(__file__ + " start!!")
     
-    print(split_str)
+    #%%
+    UT         = 0.1
+    Q          = UT * np.diag([1,1,1,1,1,1])#
+    R          = (1 - UT) * np.eye(3) 
     
-fullpath   = param_path + name[0] + ext[0]
-param_dict = np.load(fullpath, encoding='ASCII', allow_pickle='True').item()
-y          = param_dict['y']
-time       = param_dict['t']
-fs         = param_dict['fs']
-dt         = param_dict['dt']
-Nt         = len(y)
-param_true = param_dict['param'] # exact value of satate variables 2 (parameters of Neural mass model)
-Nstate     = (y.shape[1]) + param_true.shape[1]
+    # Estimation parameter of EKF 
+    zEst       = np.zeros(3)
+    xEst       = np.array([0.0,0.0,0.0,20.0,10.0,0.0])
+    PEst       = Q
+    
+    # history
+    x_pred      = np.zeros((Nt, Nstate))
+    y_pred      = np.zeros((Nt, 3))
+    loglike     = np.zeros(Nt)
+    x_pred[0,:] = xEst
+    y_obs       =  y + 0.1 * np.random.randn(Nt, 3)
+    for t in range(0,Nt):
+        z = y_obs[t,:]
+        xEst, PEst, zEst, S, R, LL = ekf_estimation(z, xEst, PEst, Q, R, UT, dt)
+        # store data history
+        x_pred[t,:] = xEst
+        y_pred[t,:] = zEst
+        loglike[t]  = LL
+        print(t+1)
+    #%%
+    plt.plot(time, y[:,0]);  
+    plt.plot(time, y_pred[:,0]);
+    plt.xlabel('time (s)')
+    plt.ylabel('amplitude (a.u.)')
+    plt.savefig(fig_save_dir + 'x1_time_series.png', bbox_inches="tight")
+    plt.savefig(fig_save_dir + 'x1_time_series.svg', bbox_inches="tight")
+    plt.show()
+    #%%
+    plt.plot(y[:,0], y[:,1], label='exact', linestyle = '--', zorder=2);
+    plt.plot(y_pred[:,0], y_pred[:,1],label='estimated', zorder=1);
+    plt.xlabel('$x_1$')
+    plt.ylabel('$x_2$')
+    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0, fontsize=26, frameon=False)
+    plt.savefig(fig_save_dir + 'trajectory.png', bbox_inches="tight")
+    plt.savefig(fig_save_dir + 'trajectory.svg', bbox_inches="tight")
+    plt.show()
+    #%%
+    plt.plot(time, param_true[:,-1], label='exact', zorder=2);
+    plt.plot(time, x_pred[:,-1], label='estimated', zorder=1)
+    plt.ylim(0, 30)
+    plt.xlabel('time (s)')
+    plt.ylabel('amplitude (a.u.)')
+    plt.title('parameter $r$')
+    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0, fontsize=26, frameon=False)
+    plt.savefig(fig_save_dir + 'param_r.png', bbox_inches="tight")
+    plt.savefig(fig_save_dir + 'param_r.svg', bbox_inches="tight")
+    plt.show()
+    #%%
+    plt.plot(time, param_true[:,1], label='exact', zorder=2);
+    plt.plot(time, x_pred[:,-2], label='estimated', zorder=1)
+    plt.ylim(0, 30)
+    plt.xlabel('time (s)')
+    plt.ylabel('amplitude (a.u.)')
+    plt.title('parameter $\\beta$')
+    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0, fontsize=26, frameon=False)
+    plt.savefig(fig_save_dir + 'param_b.png', bbox_inches="tight")
+    plt.savefig(fig_save_dir + 'param_b.svg', bbox_inches="tight")
+    plt.show()
+    #%%
+    plt.plot(time, param_true[:,0], label='exact', zorder=2);
+    plt.plot(time, x_pred[:,-3], label='estimated', zorder=1)
+    plt.ylim(0, 30)
+    plt.xlabel('time (s)')
+    plt.ylabel('amplitude (a.u.)')
+    plt.title('parameter $\sigma$')
+    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0, fontsize=26, frameon=False)
+    plt.savefig(fig_save_dir + 'param_sigm.png', bbox_inches="tight")
+    plt.savefig(fig_save_dir + 'param_sigm.svg', bbox_inches="tight")
+    plt.show()
 #%%
-# def main():
-print(__file__ + " start!!")
-
-#%%
-UT         = 0.1
-Q          = UT * np.diag([1,1,1,1,1,1])#
-R          = (1 - UT) * np.eye(3) 
-
-# Estimation parameter of EKF 
-zEst       = np.zeros(3)
-xEst       = np.array([0.0,0.0,0.0,20.0,10.0,0.0])
-PEst       = Q
-
-# history
-x_pred      = np.zeros((Nt, Nstate))
-y_pred      = np.zeros((Nt, 3))
-loglike     = np.zeros(Nt)
-x_pred[0,:] = xEst
-y_obs       =  y + 0.1 * np.random.randn(Nt, 3)
-for t in range(0,Nt):
-    z = y_obs[t,:]
-    xEst, PEst, zEst, S, R, LL = ekf_estimation(z, xEst, PEst, Q, R, UT, dt)
-    # store data history
-    x_pred[t,:] = xEst
-    y_pred[t,:] = zEst
-    loglike[t]  = LL
-    print(t+1)
-#%%
-plt.plot(time, y[:,0]);  
-plt.plot(time, y_pred[:,0]);
-plt.xlabel('time (s)')
-plt.ylabel('amplitude (a.u.)')
-plt.show()
-#%%
-plt.plot(y[:,0], y[:,1], label='exact', linestyle = '--', zorder=2);
-plt.plot(y_pred[:,0], y_pred[:,1],label='estimated', zorder=1);
-plt.xlabel('$x_1$')
-plt.ylabel('$x_2$')
-plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0, fontsize=26, frameon=False)
-plt.show()
-#%%
-plt.plot(time, param_true[:,-1], label='exact', zorder=2);
-plt.plot(time, x_pred[:,-1], label='estimated', zorder=1)
-plt.ylim(0, 30)
-plt.xlabel('time (s)')
-plt.ylabel('amplitude (a.u.)')
-plt.title('parameter $r$')
-plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0, fontsize=26, frameon=False)
-plt.show()
-#%%
-plt.plot(time, param_true[:,1], label='exact', zorder=2);
-plt.plot(time, x_pred[:,-2], label='estimated', zorder=1)
-plt.ylim(0, 30)
-plt.xlabel('time (s)')
-plt.ylabel('amplitude (a.u.)')
-plt.title('parameter $b$')
-plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0, fontsize=26, frameon=False)
-plt.show()
-#%%
-plt.plot(time, param_true[:,0], label='exact', zorder=2);
-plt.plot(time, x_pred[:,-3], label='estimated', zorder=1)
-plt.ylim(0, 30)
-plt.xlabel('time (s)')
-plt.ylabel('amplitude (a.u.)')
-plt.title('parameter $\sigma$')
-plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0, fontsize=26, frameon=False)
-plt.show()
-
-# if __name__ == '__main__':
-#     main()
+if __name__ == '__main__':
+    main()
