@@ -37,7 +37,7 @@ import sys
 sys.path.append(current_path)
 
 from my_modules.my_jansen_rit import *
-from my_modules.ekf_JRmodel import *
+from my_modules.ekf_JRmodel import EKF_JansenRit
 from scipy import signal as sig
 import scipy.linalg
 import math
@@ -85,8 +85,6 @@ def main():
     UT         = 1E-6
     Q          = UT * np.eye(Nstate)
     R          = (1-UT) * 0.1 + UT * 1
-    # Q          = np.diag(np.hstack((1E-3 * np.ones(6), 1E-3*np.array([A**2, a**2, B**2, b**2, p**2]))))
-    # R          = (0.2 * eeg.std())**2
     
     xEst       = np.zeros(Nstate)
     PEst       = Q
@@ -100,13 +98,23 @@ def main():
     eeg_observe = eeg
     x_pred[0,:] = xEst
     loglike     = np.zeros(Nt)
+    
+    ## initialization
+    model = EKF_JansenRit(xEst, PEst, Q, R, UT, dt)
+    
     for t in range(1,Nt):
-        z = eeg_observe[t-1]#np.array([eeg_observe[t], 100, 50, 220])#np.array([eeg_observe[t], 5, 5])
-        xEst, PEst, zEst, S, R, LL = ekf_estimation(z, xEst, PEst, Q, R, UT, dt)
+        z = eeg_observe[t-1]
+        ### update model
+        model.ekf_estimation(z)
+        
         # store data history
-        x_pred[t,:] = xEst
-        eeg_pred[t] = zEst[0]
-        loglike[t]  = LL
+        PEst = model.P
+        S    = model.S
+        R    = model.R
+        
+        x_pred[t,:] = model.X
+        eeg_pred[t] = model.zPred[0]
+        loglike[t]  = model.loglike
         
         print(t+1)
         #%%
@@ -139,7 +147,8 @@ def main():
         plt.savefig(fig_save_dir + 'param_' + str(i+1) +'.png', bbox_inches="tight")
         plt.savefig(fig_save_dir + 'param_' + str(i+1) +'.svg', bbox_inches="tight")
         plt.show()
-
+    
+    return model, x_pred, param_pred, eeg_pred, loglike
 #%%
 if __name__ == '__main__':
-    main()
+    model, x_pred, param_pred, eeg_pred, loglike = main()
