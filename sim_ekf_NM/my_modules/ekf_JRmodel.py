@@ -79,7 +79,6 @@ class EKF_JansenRit:
         Q       = self.Q
         dt      = self.dt
         
-        
         x       = deepcopy(X[:6])
         par     = deepcopy(X[6:])
         
@@ -94,6 +93,8 @@ class EKF_JansenRit:
         ### Convert from Jacobian matrix A to State transition matrix F
         ## Taylor approximation of matrix exponential
         F       = np.eye(len(X)) + A*dt # F = exp (A * dt) = I + A * dt
+        
+        ## Update State model
         X_new   = F @ X #  F X = exp (A * dt) X
         
         x_new   = X_new[:6]#x + X_new[:6] * dt + eta * np.sqrt(dt) * np.random.normal(loc=0, scale=1, size=Nx)
@@ -105,12 +106,24 @@ class EKF_JansenRit:
         self.X = XPred
         self.P = PPred
     
+
     def update(self):
         z     = self.z
         X     = self.X
         P     = self.P
         R     = self.R
         UT    = self.UT
+        
+        D     = np.array([
+                          [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
+                          [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+                          [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
+                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]
+                         ])
+        ub    = np.array([5.00,  100,  60,   100,  300])
+        lb    = np.array([0.00,   16, 0.00,   16,  180])
+        b     = np.zeros(ub.shape)
         
         H     = np.array([[0, 1, -1, 0, 0, 0, 0, 0, 0, 0, 0]])
         zPred = H @ X
@@ -123,8 +136,27 @@ class EKF_JansenRit:
         X_new = X + K @ y
         P_new = P - K @ H @ P # P - K @ S @ K.T
         
-        R     = (1-UT) * R + UT * y**2
+        ##### inequality constraints ##########################################
+        ###   Constraint would be applied only when the inequality condition is not satisfied.
+        I     = np.eye(len(X_new))
+        W_inv = np.linalg.inv(P_new)
+        L     = W_inv @ D.T @ np.linalg.pinv(D @ W_inv @ D.T)
+        value = D @ X_new 
+        for i in range(len(value)):
+            if (value[i] > ub[i]) | (value[i] < lb[i]):
+                if (value[i] > ub[i]): 
+                    b[i] = ub[i]
+                elif (value[i] < lb[i]):
+                    b[i] = lb[i]
+        ## Calculate state variables with interval contraints
+        X_c   = X_new - L @ (D @ X_new - b)
         
+        for i in range(len(value)):
+            if (value[i] > ub[i]) | (value[i] < lb[i]):
+                X_new[i+6] = X_c[i+6]
+        ##### inequality constraints ##########################################
+        
+        R     = (1-UT) * R + UT * y**2        
         ### log-likelihood
         _, logdet = np.linalg.slogdet(S)
         

@@ -11,13 +11,16 @@ get_ipython().magic('reset -sf')
 #get_ipython().magic('cls')
 
 import os
-if os.name == 'posix': # for linux
-    os.chdir('/home/user/Documents/Python_Scripts/sim_Kalman_JansenRit/')
-elif os.name == 'nt': # for windows
-    os.chdir('D:/GitHub/nm_coupling_sim/sim_Kalman_JansenRit/')
+# if os.name == 'posix': # for linux
+#     os.chdir('/home/user/Documents/Python_Scripts/sim_Kalman_JansenRit/')
+# elif os.name == 'nt': # for windows
+#     os.chdir('D:/python_share/sim_Kalman_JansenRit/')
 
 
-current_path = os.getcwd()
+# current_path = os.getcwd()
+current_path = os.path.dirname(__file__)
+os.chdir(current_path)
+
 fig_save_dir = current_path + '/figures/demo_JRmodel/' 
 if os.path.exists(fig_save_dir)==False:  # Make the directory for figures
     os.makedirs(fig_save_dir)
@@ -69,22 +72,21 @@ def main():
     x_true         = param_dict['y']     # exact value of satate variables 1 (numerical solution of Neural mass model)
     param_true     = param_dict['param'] # exact value of satate variables 2 (parameters of Neural mass model)
     
-    # eeg            = eeg - eeg.mean()
+    eeg            = eeg #+ 0.1 * np.random.randn(Nt)
     Nstate         = (x_true.shape[1]) + param_true.shape[1]
     #%%
     
     print(__file__ + " start!!")
     # Estimation parameter of EKF 
-    
     A          = 3.25
     a          = 100
     B          = 22
     b          = 50
     p          = 220
     
-    UT         = 1E-6
+    UT         = 1E-5
     Q          = UT * np.eye(Nstate)
-    R          = (1-UT) * 0.1 + UT * 1
+    R          = (1-UT) * .1 
     
     xEst       = np.zeros(Nstate)
     PEst       = Q
@@ -103,7 +105,7 @@ def main():
     model = EKF_JansenRit(xEst, PEst, Q, R, UT, dt)
     
     for t in range(1,Nt):
-        z = eeg_observe[t-1]
+        z = eeg_observe[t-1] 
         ### update model
         model.ekf_estimation(z)
         
@@ -132,8 +134,8 @@ def main():
     fig_name = ['A', 'a', 'B', 'b', 'p']
     ylims    = np.array([[3, 4.5],
                          [98, 102],
-                         [20.5, 22.5],
-                         [48, 52],
+                         [18, 22.5],
+                         [49, 56],
                          [120, 320]])
     
     for i in range(len(fig_name)):
