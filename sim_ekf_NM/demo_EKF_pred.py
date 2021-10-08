@@ -86,7 +86,7 @@ def main():
     
     UT         = 1E-5
     Q          = UT * np.eye(Nstate)
-    R          = (1-UT) * .1 
+    R          = (1-UT) * .5
     
     xEst       = np.zeros(Nstate)
     PEst       = Q

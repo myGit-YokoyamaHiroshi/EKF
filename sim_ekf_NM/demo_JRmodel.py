@@ -77,7 +77,7 @@ P_in = np.random.normal(loc = MEAN, scale = SD, size = 1)
 #%%
 fs          = 1000
 dt          = 1/fs
-Nt          = int(3*fs)# + 100
+Nt          = int(4*fs)# + 100
 noise_scale = 0.01
 t           = np.arange(0,Nt,1)/fs
 
@@ -88,20 +88,16 @@ y_init      = y[0,:]
 dy          = np.zeros((Nt, 6))
 param       = np.zeros((Nt, 4))
 
-A           = sigmoid(4-3.25, 2, t, 2, 3.25) + np.random.normal(loc= 0, scale= .1, size=Nt)
-a           = 100  * np.ones(Nt)#np.random.normal(loc=  100, scale= .1, size=Nt)
-B           = sigmoid(22-20, -2, t, 2, 20) + np.random.normal(loc= 0, scale= .1, size=Nt)
-b           = 50   * np.ones(Nt)#sigmoid(54-50,  2, t, (Nt/fs)/2, 50)#50   * np.ones(Nt)
+A           = sigmoid(4.25-3.25, 2, t, 1.5, 3.25) + np.random.normal(loc= 0, scale= .1, size=Nt)
+a           = 100  * np.ones(Nt)
+B           = sigmoid(22-20, -2, t, 2.5, 20) + np.random.normal(loc= 0, scale= .1, size=Nt)
+b           = 50   * np.ones(Nt)
 p           = np.random.normal(loc=  220, scale= 22, size=Nt)
 
 
 dy[0, :]    = func_JR_model(y_init, A[0], a[0], B[0], b[0], p[0])
 
-for i in range(1, Nt):
-    # if i > Nt/2:
-    #     A[i] = 4
-    #     B[i] = 21
-        
+for i in range(1, Nt):        
     y_now      = y[i-1, :]
     # y_next     = euler_maruyama(dt, func_JR_model, y_now, A[i], a[i], B[i], b[i], p[i], noise_scale)
     y_next     = runge_kutta(dt, func_JR_model, y_now, A[i], a[i], B[i], b[i], p[i])

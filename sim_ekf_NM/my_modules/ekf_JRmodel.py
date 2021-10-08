@@ -122,7 +122,7 @@ class EKF_JansenRit:
                           [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]
                          ])
         ub    = np.array([5.00,  100,  60,   100,  300])
-        lb    = np.array([0.00,   16, 0.00,   16,  180])
+        lb    = np.array([0.00,   10, 0.00,   10,  180])
         b     = np.zeros(ub.shape)
         
         H     = np.array([[0, 1, -1, 0, 0, 0, 0, 0, 0, 0, 0]])
