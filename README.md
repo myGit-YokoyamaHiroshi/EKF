@@ -22,7 +22,7 @@ Simulation codes of Extended Kalman Filter
 &ensp;&ensp;(Division of Neural Dynamics, Department of System Neuroscience, National Institute for Physiological Sciences, Japan)<br>
 
 # Cite<br>
-Please cite our GitHub repository if you use this code in your own work:
+Please cite my GitHub repository if you use this code in your own work:
 
 ```
 @software{EKF,
