@@ -25,10 +25,10 @@ Simulation codes of Extended Kalman Filter
 Please cite our GitHub repository if you use this code in your own work:
 
 ```
-@software{AR_kalman_connectivity,
+@software{EKF,
   author = {Yokoyana H.},
-  title = {{AR_kalman_connectivity}},
-  url = {https://github.com/myGit-YokoyamaHiroshi/AR_kalman_connectivity},
+  title = {{EKF}},
+  url = {https://github.com/myGit-YokoyamaHiroshi/EKF},
   year = {2021}
 }
 ```
