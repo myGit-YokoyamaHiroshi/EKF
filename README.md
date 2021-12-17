@@ -27,7 +27,7 @@ Please cite our GitHub repository if you use this code in your own work:
 ```
 @software{EKF,
   author = {Yokoyana H.},
-  title = {{EKF}},
+  title = {EKF},
   url = {https://github.com/myGit-YokoyamaHiroshi/EKF},
   year = {2021}
 }
