@@ -1,5 +1,5 @@
 # EKF<br>
-Simulation codes of Extended Kalman Filter
+Simulation code of Extended Kalman Filter / Constrained Extended Kalman Filter
 
 # Requirements<br>
 &ensp; Operation has been confirmed only under the following environment. <br>
